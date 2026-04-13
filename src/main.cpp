@@ -10,6 +10,7 @@ int main(int argc, char* argv[]) {
     QQuickStyle::setStyle("Fusion");
 
     QQmlApplicationEngine engine;
+    engine.addImportPath("qrc:/");
     engine.loadFromModule("Ratatoskr", "Main");
 
     if (engine.rootObjects().isEmpty())

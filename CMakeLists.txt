@@ -52,6 +52,7 @@ target_link_libraries(ratatoskr-gui PRIVATE
     ${LIBPULSE_LIBRARIES}
 )
 
-install(TARGETS ratatoskr-gui DESTINATION bin)
-install(FILES data/ratatoskr-gui.desktop DESTINATION share/applications)
-install(FILES data/ratatoskr-gui.svg DESTINATION share/icons/hicolor/scalable/apps)
+include(GNUInstallDirs)
+install(TARGETS ratatoskr-gui DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(FILES data/ratatoskr-gui.desktop DESTINATION ${CMAKE_INSTALL_DATADIR}/applications)
+install(FILES data/ratatoskr-gui.svg DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps)
