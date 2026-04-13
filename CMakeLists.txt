@@ -53,3 +53,5 @@ target_link_libraries(ratatoskr-gui PRIVATE
 )
 
 install(TARGETS ratatoskr-gui DESTINATION bin)
+install(FILES data/ratatoskr-gui.desktop DESTINATION share/applications)
+install(FILES data/ratatoskr-gui.svg DESTINATION share/icons/hicolor/scalable/apps)

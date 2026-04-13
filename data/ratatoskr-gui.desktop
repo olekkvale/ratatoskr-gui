@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Ratatoskr
+Comment=Hardware control for A50 headset
+Exec=ratatoskr-gui
+Icon=ratatoskr-gui
+Type=Application
+Categories=AudioVideo;Audio;Settings;HardwareSettings;
+Keywords=headset;audio;equalizer;volume;
