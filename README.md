@@ -31,6 +31,20 @@ cmake ..
 make
 ```
 
+## Installation
+
+```bash
+# From project root (not inside build/)
+sudo cmake --install build
+```
+
+Installs to `/usr/local` by default:
+- `/usr/local/bin/ratatoskr-gui`
+- `/usr/local/share/applications/ratatoskr-gui.desktop`
+- `/usr/local/share/icons/hicolor/scalable/apps/ratatoskr-gui.svg`
+
+For distro packaging, use `-DCMAKE_INSTALL_PREFIX=/usr`.
+
 ## Running
 
 ```bash
