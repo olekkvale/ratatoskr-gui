@@ -2,6 +2,14 @@
 
 Qt6/QML frontend for [ratatoskrd](https://github.com/olekkvale/ratatoskr) -- open source hardware control for Linux.
 
+## Supported devices
+
+- **Logitech Astro A50 Gen 5** -- full control surface: Volume, Stream Routing, EQ Editor, Settings
+
+### Planned (pending driver support in ratatoskrd)
+
+- **Keychron Q6 HE** (USB wired + 2.4 GHz dongle)
+
 ## Features
 
 - **Volume** -- headset volume, MixAmp, sidetone, mic input (PipeWire/PulseAudio)
