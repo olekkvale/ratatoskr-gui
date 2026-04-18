@@ -4,7 +4,7 @@ import QtQuick.Layouts
 
 Rectangle {
     id: streamPanel
-    color: "#1a1a2e"
+    color: palette.base
     radius: 12
 
     required property QtObject device
@@ -47,18 +47,18 @@ Rectangle {
             y: ctrl.topPadding + ctrl.availableHeight / 2 - height / 2
             implicitWidth: 200; implicitHeight: 6
             width: ctrl.availableWidth; height: implicitHeight
-            radius: 3; color: "#16213e"
+            radius: 3; color: palette.dark
             Rectangle {
                 width: ctrl.visualPosition * parent.width
-                height: parent.height; radius: 3; color: "#4a6fa5"
+                height: parent.height; radius: 3; color: palette.highlight
             }
         }
         handle: Rectangle {
             x: ctrl.leftPadding + ctrl.visualPosition * (ctrl.availableWidth - width)
             y: ctrl.topPadding + ctrl.availableHeight / 2 - height / 2
             implicitWidth: 20; implicitHeight: 20; radius: 10
-            color: ctrl.pressed ? "#5a80b8" : "#4a6fa5"
-            border.color: "#8aa0c0"; border.width: 1
+            color: ctrl.pressed ? Qt.darker(palette.highlight, 1.3) : palette.highlight
+            border.color: palette.mid; border.width: 1
         }
     }
 
@@ -91,10 +91,10 @@ Rectangle {
 
         Layout.fillWidth: true; spacing: 4
         RowLayout {
-            Label { text: parent.parent.label; color: "#c0c0d0"; font.pixelSize: 14; font.bold: true }
-            Label { text: parent.parent.desc; color: "#556677"; font.pixelSize: 11; visible: parent.parent.desc !== "" }
+            Label { text: parent.parent.label; color: palette.text; font.pixelSize: 14; font.bold: true }
+            Label { text: parent.parent.desc; color: palette.disabled.text; font.pixelSize: 11; visible: parent.parent.desc !== "" }
             Item { Layout.fillWidth: true }
-            Label { text: Math.round(chSlider.value / 32 * 100) + "%"; color: "#4a6fa5"; font.pixelSize: 14; font.bold: true }
+            Label { text: Math.round(chSlider.value / 32 * 100) + "%"; color: palette.highlight; font.pixelSize: 14; font.bold: true }
         }
         RowLayout {
             spacing: 8
@@ -123,8 +123,8 @@ Rectangle {
             width: parent.width
             spacing: 18
 
-            Label { text: "Stream Routing"; color: "#c0c0d0"; font.pixelSize: 15; font.bold: true }
-            Label { text: "Controls what your streaming audience hears"; color: "#556677"; font.pixelSize: 11; Layout.topMargin: -14 }
+            Label { text: "Stream Routing"; color: palette.text; font.pixelSize: 15; font.bold: true }
+            Label { text: "Controls what your streaming audience hears"; color: palette.disabled.text; font.pixelSize: 11; Layout.topMargin: -14 }
 
             ChannelRow {
                 label: "Stream"; desc: "(master)"

@@ -4,7 +4,7 @@ import QtQuick.Layouts
 
 Rectangle {
     id: eqPanel
-    color: "#1a1a2e"
+    color: palette.base
     radius: 12
 
     required property QtObject device
@@ -80,21 +80,21 @@ Rectangle {
     component ToggleBtn: Rectangle {
         property string label; property bool active; signal clicked()
         implicitWidth: lbl.implicitWidth + 24; height: 32; radius: 8
-        color: active ? "#4a6fa5" : "#16213e"
-        border.color: active ? "#5a80b8" : "#2a3a5e"; border.width: 1
+        color: active ? palette.highlight : palette.dark
+        border.color: active ? Qt.darker(palette.highlight, 1.3) : palette.mid; border.width: 1
         Label { id: lbl; anchors.centerIn: parent; text: parent.label
-            color: active ? "#fff" : "#667799"; font.pixelSize: 12; font.bold: active }
+            color: active ? palette.highlightedText : palette.disabled.text; font.pixelSize: 12; font.bold: active }
         MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: parent.clicked() }
     }
 
     component PresetBtn: Rectangle {
-        property string label; property color textColor: "#8899bb"; property color borderColor: "#2a3a5e"
+        property string label; property color textColor: palette.disabled.text; property color borderColor: palette.mid
         property bool active: activePreset === label
         signal clicked()
         Layout.fillWidth: true; height: 30; radius: 6
-        color: active ? "#4a6fa5" : (ma.containsMouse ? "#1e2a44" : "#16213e")
-        border.color: active ? "#5a80b8" : borderColor; border.width: 1
-        Label { anchors.centerIn: parent; text: parent.label; color: parent.active ? "#fff" : parent.textColor; font.pixelSize: 11 }
+        color: active ? palette.highlight : (ma.containsMouse ? palette.button : palette.dark)
+        border.color: active ? Qt.darker(palette.highlight, 1.3) : borderColor; border.width: 1
+        Label { anchors.centerIn: parent; text: parent.label; color: parent.active ? palette.highlightedText : parent.textColor; font.pixelSize: 11 }
         MouseArea { id: ma; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: parent.clicked() }
     }
 
@@ -245,7 +245,7 @@ Rectangle {
                     Label {
                         x: 0; width: 28
                         y: bandArea.sliderTop + index * (bandArea.sliderH / 4) - 6
-                        text: modelData; color: "#445566"; font.pixelSize: 9
+                        text: modelData; color: palette.disabled.text; font.pixelSize: 9
                         horizontalAlignment: Text.AlignRight
                     }
                 }
@@ -254,7 +254,7 @@ Rectangle {
                 Rectangle {
                     x: 34; width: parent.width - 34
                     y: bandArea.sliderTop + bandArea.sliderH / 2
-                    height: 1; color: "#2a3a5e"; opacity: 0.5
+                    height: 1; color: palette.mid; opacity: 0.5
                 }
 
                 // Band columns (absolute positioning per element)
@@ -297,20 +297,20 @@ Rectangle {
                                 y: gainSlider.topPadding
                                 implicitWidth: 6; implicitHeight: 200
                                 width: implicitWidth; height: gainSlider.availableHeight
-                                radius: 3; color: "#16213e"
+                                radius: 3; color: palette.dark
                                 Rectangle {
                                     y: gainSlider.visualPosition * parent.height
                                     width: parent.width
                                     height: (1.0 - gainSlider.visualPosition) * parent.height
-                                    radius: 3; color: "#4a6fa5"
+                                    radius: 3; color: palette.highlight
                                 }
                             }
                             handle: Rectangle {
                                 x: gainSlider.leftPadding + gainSlider.availableWidth / 2 - width / 2
                                 y: gainSlider.topPadding + gainSlider.visualPosition * (gainSlider.availableHeight - height)
                                 implicitWidth: 16; implicitHeight: 16; radius: 8
-                                color: gainSlider.pressed ? "#5a80b8" : "#4a6fa5"
-                                border.color: "#8aa0c0"; border.width: 1
+                                color: gainSlider.pressed ? Qt.darker(palette.highlight, 1.3) : palette.highlight
+                                border.color: palette.mid; border.width: 1
                             }
                         }
 
@@ -318,7 +318,7 @@ Rectangle {
                         Label {
                             y: bandArea.freqY
                             text: formatFreq(currentBands[index].freq)
-                            color: "#667799"; font.pixelSize: 10
+                            color: palette.disabled.text; font.pixelSize: 10
                             anchors.horizontalCenter: parent.horizontalCenter
                         }
 
@@ -327,7 +327,7 @@ Rectangle {
                             visible: advancedMode
                             y: bandArea.qLabelY
                             text: "Q " + (qSlider.value % 1 === 0 ? qSlider.value.toFixed(1) : parseFloat(qSlider.value.toFixed(3)).toString())
-                            color: "#7799aa"; font.pixelSize: 10
+                            color: palette.disabled.text; font.pixelSize: 10
                             anchors.horizontalCenter: parent.horizontalCenter
                         }
 
@@ -346,18 +346,18 @@ Rectangle {
                                 y: qSlider.topPadding + qSlider.availableHeight / 2 - height / 2
                                 implicitWidth: 40; implicitHeight: 4
                                 width: qSlider.availableWidth; height: implicitHeight
-                                radius: 2; color: "#16213e"
+                                radius: 2; color: palette.dark
                                 Rectangle {
                                     width: qSlider.visualPosition * parent.width
-                                    height: parent.height; radius: 2; color: "#3a5a7a"
+                                    height: parent.height; radius: 2; color: Qt.darker(palette.highlight, 1.8)
                                 }
                             }
                             handle: Rectangle {
                                 x: qSlider.leftPadding + qSlider.visualPosition * (qSlider.availableWidth - width)
                                 y: qSlider.topPadding + qSlider.availableHeight / 2 - height / 2
                                 implicitWidth: 12; implicitHeight: 12; radius: 6
-                                color: qSlider.pressed ? "#5a80b8" : "#3a5a7a"
-                                border.color: "#6688aa"; border.width: 1
+                                color: qSlider.pressed ? Qt.darker(palette.highlight, 1.3) : Qt.darker(palette.highlight, 1.8)
+                                border.color: palette.mid; border.width: 1
                             }
                         }
                     }
@@ -405,12 +405,12 @@ Rectangle {
                 visible: savingMode; spacing: 6
                 Rectangle {
                     Layout.fillWidth: true; height: 32; radius: 6
-                    color: "#16213e"; border.color: "#4a6fa5"; border.width: 1
+                    color: palette.dark; border.color: palette.highlight; border.width: 1
                     TextInput {
                         id: saveNameField; anchors.fill: parent; anchors.margins: 8
-                        color: "#e0e0e0"; font.pixelSize: 12; clip: true
+                        color: palette.text; font.pixelSize: 12; clip: true
                         onAccepted: savePreset()
-                        Text { text: "Preset name"; color: "#445566"; font.pixelSize: 12
+                        Text { text: "Preset name"; color: palette.disabled.text; font.pixelSize: 12
                             visible: !parent.text && !parent.activeFocus }
                     }
                 }
@@ -422,12 +422,12 @@ Rectangle {
                 visible: renamingMode; spacing: 6
                 Rectangle {
                     Layout.fillWidth: true; height: 32; radius: 6
-                    color: "#16213e"; border.color: "#4a6fa5"; border.width: 1
+                    color: palette.dark; border.color: palette.highlight; border.width: 1
                     TextInput {
                         id: renameField; anchors.fill: parent; anchors.margins: 8
-                        color: "#e0e0e0"; font.pixelSize: 12; clip: true
+                        color: palette.text; font.pixelSize: 12; clip: true
                         onAccepted: renamePreset()
-                        Text { text: activePreset; color: "#445566"; font.pixelSize: 12
+                        Text { text: activePreset; color: palette.disabled.text; font.pixelSize: 12
                             visible: !parent.text && !parent.activeFocus }
                     }
                 }
@@ -438,7 +438,7 @@ Rectangle {
             ColumnLayout {
                 visible: eqType === 0
                 Layout.fillWidth: true; spacing: 6; Layout.topMargin: 4
-                Label { text: "Noise Gate"; color: "#c0c0d0"; font.pixelSize: 13; font.bold: true }
+                Label { text: "Noise Gate"; color: palette.text; font.pixelSize: 13; font.bold: true }
                 RowLayout {
                     spacing: 6; Layout.fillWidth: true
                     Repeater {
@@ -446,10 +446,10 @@ Rectangle {
                         Rectangle {
                             property bool isActive: noiseGateState === modelData.value
                             Layout.fillWidth: true; height: 30; radius: 6
-                            color: isActive ? "#4a6fa5" : (ngMa.containsMouse ? "#1e2a44" : "#16213e")
-                            border.color: isActive ? "#5a80b8" : "#2a3a5e"; border.width: 1
+                            color: isActive ? palette.highlight : (ngMa.containsMouse ? palette.button : palette.dark)
+                            border.color: isActive ? Qt.darker(palette.highlight, 1.3) : palette.mid; border.width: 1
                             Label { anchors.centerIn: parent; text: modelData.label
-                                color: parent.isActive ? "#fff" : "#8899bb"; font.pixelSize: 11 }
+                                color: parent.isActive ? palette.highlightedText : palette.disabled.text; font.pixelSize: 11 }
                             MouseArea { id: ngMa; anchors.fill: parent; hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: { device.setNoiseGate(index); noiseGateState = modelData.value } }

@@ -76,6 +76,19 @@ sudo ratatoskrd
 ratatoskr-gui
 ```
 
+## Theming
+
+The GUI uses the system Qt6 color palette (QPalette) via Fusion style, so
+appearance follows your desktop Qt theme. Background, text, highlight, border
+and hover colors are all driven by the active palette.
+
+- **Configure with qt6ct** (`QT_QPA_PLATFORMTHEME=qt6ct`) to pick any color
+  scheme -- the GUI reflects changes immediately on next launch.
+- **No qt6ct?** Fusion's default palette is used; the GUI remains functional
+  but loses the custom accent.
+- **Semantic colors** (status indicators for battery low, mic mute, connected,
+  EQ gain direction) are intentionally hardcoded and do not follow the palette.
+
 ## License
 
 GPL-3.0. See [LICENSE](LICENSE).

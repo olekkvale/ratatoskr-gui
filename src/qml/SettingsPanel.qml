@@ -4,7 +4,7 @@ import QtQuick.Layouts
 
 Rectangle {
     id: settingsPanel
-    color: "#1a1a2e"
+    color: palette.base
     radius: 12
 
     required property QtObject device
@@ -26,11 +26,11 @@ Rectangle {
         signal clicked()
         Layout.fillWidth: true
         height: 32; radius: 6
-        color: active ? "#4a6fa5" : (btnMa.containsMouse ? "#1e2a44" : "#16213e")
-        border.color: active ? "#5a80b8" : "#2a3a5e"; border.width: 1
+        color: active ? palette.highlight : (btnMa.containsMouse ? palette.button : palette.dark)
+        border.color: active ? Qt.darker(palette.highlight, 1.3) : palette.mid; border.width: 1
         Label {
             anchors.centerIn: parent; text: parent.label
-            color: parent.active ? "#fff" : "#667799"; font.pixelSize: 12
+            color: parent.active ? palette.highlightedText : palette.disabled.text; font.pixelSize: 12
         }
         MouseArea {
             id: btnMa; anchors.fill: parent; hoverEnabled: true
@@ -40,7 +40,7 @@ Rectangle {
     }
 
     component SectionLabel: Label {
-        color: "#c0c0d0"; font.pixelSize: 13; font.bold: true
+        color: palette.text; font.pixelSize: 13; font.bold: true
         Layout.topMargin: 4
     }
 
@@ -59,15 +59,15 @@ Rectangle {
             SectionLabel { text: "Device Info" }
             GridLayout {
                 columns: 2; columnSpacing: 16; rowSpacing: 6; Layout.fillWidth: true
-                Label { text: "Name"; color: "#667799"; font.pixelSize: 12 }
-                Label { text: device.deviceName || "--"; color: "#c0c0d0"; font.pixelSize: 12 }
-                Label { text: "Serial"; color: "#667799"; font.pixelSize: 12 }
-                Label { text: device.serialNumber || "--"; color: "#c0c0d0"; font.pixelSize: 12 }
-                Label { text: "Firmware"; color: "#667799"; font.pixelSize: 12 }
-                Label { text: device.firmware || "--"; color: "#c0c0d0"; font.pixelSize: 12 }
-                Label { text: "Uptime"; color: "#667799"; font.pixelSize: 12 }
+                Label { text: "Name"; color: palette.disabled.text; font.pixelSize: 12 }
+                Label { text: device.deviceName || "--"; color: palette.text; font.pixelSize: 12 }
+                Label { text: "Serial"; color: palette.disabled.text; font.pixelSize: 12 }
+                Label { text: device.serialNumber || "--"; color: palette.text; font.pixelSize: 12 }
+                Label { text: "Firmware"; color: palette.disabled.text; font.pixelSize: 12 }
+                Label { text: device.firmware || "--"; color: palette.text; font.pixelSize: 12 }
+                Label { text: "Uptime"; color: palette.disabled.text; font.pixelSize: 12 }
                 Label {
-                    color: "#c0c0d0"; font.pixelSize: 12
+                    color: palette.text; font.pixelSize: 12
                     text: {
                         if (device.uptime < 0) return "--"
                         let s = device.uptime
@@ -82,11 +82,11 @@ Rectangle {
             SectionLabel { text: "Bluetooth" }
             GridLayout {
                 columns: 2; columnSpacing: 16; rowSpacing: 6; Layout.fillWidth: true
-                Label { text: "Status"; color: "#667799"; font.pixelSize: 12 }
+                Label { text: "Status"; color: palette.disabled.text; font.pixelSize: 12 }
                 Label { text: device.btConnected ? "Connected" : "Disconnected"
-                    color: device.btConnected ? "#5a9a6a" : "#667799"; font.pixelSize: 12 }
-                Label { text: "Device"; color: "#667799"; font.pixelSize: 12 }
-                Label { text: device.btName || "--"; color: "#c0c0d0"; font.pixelSize: 12 }
+                    color: device.btConnected ? "#5a9a6a" : palette.disabled.text; font.pixelSize: 12 }
+                Label { text: "Device"; color: palette.disabled.text; font.pixelSize: 12 }
+                Label { text: device.btName || "--"; color: palette.text; font.pixelSize: 12 }
             }
 
             // Notifications
@@ -132,21 +132,21 @@ Rectangle {
                         y: ledSlider.topPadding + ledSlider.availableHeight / 2 - height / 2
                         implicitWidth: 200; implicitHeight: 6
                         width: ledSlider.availableWidth; height: implicitHeight
-                        radius: 3; color: "#16213e"
+                        radius: 3; color: palette.dark
                         Rectangle {
                             width: ledSlider.visualPosition * parent.width
-                            height: parent.height; radius: 3; color: "#4a6fa5"
+                            height: parent.height; radius: 3; color: palette.highlight
                         }
                     }
                     handle: Rectangle {
                         x: ledSlider.leftPadding + ledSlider.visualPosition * (ledSlider.availableWidth - width)
                         y: ledSlider.topPadding + ledSlider.availableHeight / 2 - height / 2
                         implicitWidth: 20; implicitHeight: 20; radius: 10
-                        color: ledSlider.pressed ? "#5a80b8" : "#4a6fa5"
-                        border.color: "#8aa0c0"; border.width: 1
+                        color: ledSlider.pressed ? Qt.darker(palette.highlight, 1.3) : palette.highlight
+                        border.color: palette.mid; border.width: 1
                     }
                 }
-                Label { text: ledSlider.value + "%"; color: "#4a6fa5"; font.pixelSize: 14; font.bold: true; Layout.preferredWidth: 40 }
+                Label { text: ledSlider.value + "%"; color: palette.highlight; font.pixelSize: 14; font.bold: true; Layout.preferredWidth: 40 }
             }
         }
     }

@@ -7,7 +7,7 @@ Rectangle {
     Layout.fillWidth: true
     height: 72
     radius: 12
-    color: "#1a1a2e"
+    color: palette.base
 
     required property QtObject device
 
@@ -28,7 +28,7 @@ Rectangle {
                 spacing: 0
                 Label {
                     text: "A50 Gen 5: "
-                    color: "#c0c0d0"
+                    color: palette.text
                     font.pixelSize: 13
                     font.bold: true
                 }
@@ -69,7 +69,7 @@ Rectangle {
             }
             Label {
                 text: device.charging ? "Charging" : "Battery"
-                color: device.charging ? "#27ae60" : "#667799"
+                color: device.charging ? "#27ae60" : palette.disabled.text
                 font.pixelSize: 10
                 horizontalAlignment: Text.AlignHCenter
             }

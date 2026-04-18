@@ -11,7 +11,7 @@ ApplicationWindow {
     minimumHeight: 560
     title: "Ratatoskr"
     visible: true
-    color: "#12121f"
+    color: palette.window
 
     DeviceProxy { id: device }
 
@@ -27,7 +27,7 @@ ApplicationWindow {
             Layout.fillWidth: true
             height: 40
             radius: 10
-            color: "#1a1a2e"
+            color: palette.base
 
             RowLayout {
                 anchors.fill: parent
@@ -40,7 +40,9 @@ ApplicationWindow {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         radius: 8
-                        color: tabIndex === index ? "#4a6fa5" : "transparent"
+                        color: tabIndex === index
+                            ? palette.highlight
+                            : (tabMa.containsMouse ? palette.button : "transparent")
 
                         property int tabIndex: 0
                         Component.onCompleted: tabIndex = Qt.binding(() => stack.currentIndex)
@@ -48,13 +50,15 @@ ApplicationWindow {
                         Label {
                             anchors.centerIn: parent
                             text: modelData
-                            color: tabIndex === index ? "#ffffff" : "#667799"
+                            color: tabIndex === index ? palette.highlightedText : palette.disabled.text
                             font.pixelSize: 13
                             font.bold: tabIndex === index
                         }
 
                         MouseArea {
+                            id: tabMa
                             anchors.fill: parent
+                            hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: stack.currentIndex = index
                         }

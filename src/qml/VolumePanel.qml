@@ -5,7 +5,7 @@ import Ratatoskr
 
 Rectangle {
     id: volumePanel
-    color: "#1a1a2e"
+    color: palette.base
     radius: 12
 
     required property QtObject device
@@ -32,13 +32,13 @@ Rectangle {
             width: ctrl.availableWidth
             height: implicitHeight
             radius: 3
-            color: "#16213e"
+            color: palette.dark
 
             Rectangle {
                 width: ctrl.visualPosition * parent.width
                 height: parent.height
                 radius: 3
-                color: "#4a6fa5"
+                color: palette.highlight
             }
         }
 
@@ -48,8 +48,8 @@ Rectangle {
             implicitWidth: 20
             implicitHeight: 20
             radius: 10
-            color: ctrl.pressed ? "#5a80b8" : "#4a6fa5"
-            border.color: "#8aa0c0"
+            color: ctrl.pressed ? Qt.darker(palette.highlight, 1.3) : palette.highlight
+            border.color: palette.mid
             border.width: 1
         }
     }
@@ -68,9 +68,9 @@ Rectangle {
             ColumnLayout {
                 Layout.fillWidth: true; spacing: 6
                 RowLayout {
-                    Label { text: "Volume"; color: "#c0c0d0"; font.pixelSize: 14; font.bold: true }
+                    Label { text: "Volume"; color: palette.text; font.pixelSize: 14; font.bold: true }
                     Item { Layout.fillWidth: true }
-                    Label { text: Math.round(volumeSlider.value / 31 * 100) + "%"; color: "#4a6fa5"; font.pixelSize: 14; font.bold: true }
+                    Label { text: Math.round(volumeSlider.value / 31 * 100) + "%"; color: palette.highlight; font.pixelSize: 14; font.bold: true }
                 }
                 AccentSlider {
                     id: volumeSlider
@@ -83,11 +83,11 @@ Rectangle {
             ColumnLayout {
                 Layout.fillWidth: true; spacing: 6
                 RowLayout {
-                    Label { text: "MixAmp"; color: "#c0c0d0"; font.pixelSize: 14; font.bold: true }
+                    Label { text: "MixAmp"; color: palette.text; font.pixelSize: 14; font.bold: true }
                     Item { Layout.fillWidth: true }
                     Label {
                         text: { let v = mixampSlider.value; return "Voice " + Math.round((12-v)/12*100) + "% / Game " + Math.round(v/12*100) + "%" }
-                        color: "#4a6fa5"; font.pixelSize: 14; font.bold: true
+                        color: palette.highlight; font.pixelSize: 14; font.bold: true
                     }
                 }
                 AccentSlider {
@@ -101,9 +101,9 @@ Rectangle {
             ColumnLayout {
                 Layout.fillWidth: true; spacing: 6
                 RowLayout {
-                    Label { text: "Sidetone"; color: "#c0c0d0"; font.pixelSize: 14; font.bold: true }
+                    Label { text: "Sidetone"; color: palette.text; font.pixelSize: 14; font.bold: true }
                     Item { Layout.fillWidth: true }
-                    Label { text: Math.round(sidetoneSlider.value / 6 * 100) + "%"; color: "#4a6fa5"; font.pixelSize: 14; font.bold: true }
+                    Label { text: Math.round(sidetoneSlider.value / 6 * 100) + "%"; color: palette.highlight; font.pixelSize: 14; font.bold: true }
                 }
                 AccentSlider {
                     id: sidetoneSlider
@@ -118,19 +118,24 @@ Rectangle {
                 Layout.fillWidth: true; spacing: 6
                 visible: micInput.available
                 RowLayout {
-                    Label { text: "Mic Input"; color: "#c0c0d0"; font.pixelSize: 14; font.bold: true }
-                    Label { text: "(system)"; color: "#556677"; font.pixelSize: 11 }
+                    Label { text: "Mic Input"; color: palette.text; font.pixelSize: 14; font.bold: true }
+                    Label { text: "(system)"; color: palette.disabled.text; font.pixelSize: 11 }
                     Item { Layout.fillWidth: true }
-                    Label { text: micInputSlider.value + "%"; color: "#4a6fa5"; font.pixelSize: 14; font.bold: true }
+                    Label { text: micInputSlider.value + "%"; color: palette.highlight; font.pixelSize: 14; font.bold: true }
                 }
                 RowLayout {
                     spacing: 8
-                    // Mute toggle
+                    // Mute toggle -- matches StatusBar mic indicator pattern
                     Rectangle {
                         width: 28; height: 28; radius: 14
                         color: micInput.muted ? "#4a2030" : "#1a3a2a"
                         border.width: 1; border.color: micInput.muted ? "#7a3040" : "#2a5a3a"
-                        Label { anchors.centerIn: parent; text: micInput.muted ? "\u{1F507}" : "\u{1F3A4}"; font.pixelSize: 11 }
+                        Image {
+                            anchors.centerIn: parent
+                            source: micInput.muted ? "qrc:/icons/icons/headphones.svg" : "qrc:/icons/icons/headset.svg"
+                            sourceSize.width: 14
+                            sourceSize.height: 14
+                        }
                         MouseArea {
                             anchors.fill: parent; cursorShape: Qt.PointingHandCursor
                             onClicked: micInput.setMuted(!micInput.muted)
