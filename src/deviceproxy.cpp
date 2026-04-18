@@ -88,6 +88,18 @@ void DeviceProxy::pollAll() {
         w->deleteLater();
     });
 
+    // Mic mute (returns bool). Ratatoskrd queries HW flip-to-mute via 0c 2b
+    // bit 0, so initial state is correct without waiting for a lever transition.
+    auto* micCall = new QDBusPendingCallWatcher(m_iface->asyncCall("GetMicMute"), this);
+    connect(micCall, &QDBusPendingCallWatcher::finished, this, [this](QDBusPendingCallWatcher* w) {
+        QDBusPendingReply<bool> reply = *w;
+        if (!reply.isError()) {
+            m_micMuted = reply.value();
+            emit micMuteChanged();
+        }
+        w->deleteLater();
+    });
+
     pollBattery();
 }
 
@@ -151,8 +163,14 @@ void DeviceProxy::onMixampChanged(int level) {
 }
 
 void DeviceProxy::onPowerChanged(int state) {
+    bool wasConnected = m_connected;
     m_connected = (state == 0);
     emit connectedChanged();
+    // Re-poll on power-on so mic mute and other state reflect the newly
+    // connected headset rather than stale values from before power-off.
+    if (m_connected && !wasConnected) {
+        QTimer::singleShot(500, this, &DeviceProxy::pollAll);
+    }
 }
 
 void DeviceProxy::onBluetoothChanged(bool connected) {
