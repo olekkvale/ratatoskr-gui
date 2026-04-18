@@ -34,25 +34,38 @@ make
 ## Installation
 
 ```bash
-# From project root (not inside build/)
+# Recommended: match daemon prefix for consistent paths
+cmake -B build -DCMAKE_INSTALL_PREFIX=/usr
+cmake --build build
 sudo cmake --install build
 ```
 
-Installs to `/usr/local` by default:
-- `/usr/local/bin/ratatoskr-gui`
-- `/usr/local/share/applications/ratatoskr-gui.desktop`
-- `/usr/local/share/icons/hicolor/scalable/apps/ratatoskr-gui.svg`
+Files installed (with `-DCMAKE_INSTALL_PREFIX=/usr`):
+- `/usr/bin/ratatoskr-gui`
+- `/usr/share/applications/ratatoskr-gui.desktop`
+- `/usr/share/icons/hicolor/scalable/apps/ratatoskr-gui.svg`
 
-For distro packaging, use `-DCMAKE_INSTALL_PREFIX=/usr`.
+Default prefix is `/usr/local` if `-DCMAKE_INSTALL_PREFIX` is omitted.
+
+## Uninstallation
+
+```bash
+sudo cmake --build build --target uninstall
+```
 
 ## Running
 
+The daemon must run on the system D-Bus before starting the GUI.
+
 ```bash
-# Start daemon first (requires root)
+# Primary: systemd-managed daemon (installed by ratatoskrd package)
+sudo systemctl start ratatoskrd
+
+# Alternative (development): run daemon manually
 sudo ratatoskrd
 
-# Then start GUI (as regular user)
-./build/ratatoskr-gui
+# Start GUI (as regular user)
+ratatoskr-gui
 ```
 
 ## License
