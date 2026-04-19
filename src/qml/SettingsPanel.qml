@@ -148,6 +148,57 @@ Rectangle {
                 }
                 Label { text: ledSlider.value + "%"; color: palette.highlight; font.pixelSize: 14; font.bold: true; Layout.preferredWidth: 40 }
             }
+
+            // Factory Reset -- destructive, two-step confirmation with timeout
+            SectionLabel { text: "Factory Reset"; Layout.topMargin: 12 }
+            Label {
+                Layout.fillWidth: true
+                text: "Resets every headset setting to factory defaults. Requires the serial number to confirm, sent automatically."
+                color: palette.disabled.text; font.pixelSize: 11; wrapMode: Text.Wrap
+            }
+            Rectangle {
+                id: resetBtn
+                Layout.fillWidth: true
+                height: 36; radius: 6
+                property bool armed: false
+                color: {
+                    if (!device.serialNumber) return palette.dark
+                    if (armed) return "#4a2030"
+                    return resetMa.containsMouse ? palette.button : palette.dark
+                }
+                border.color: armed ? "#7a3040" : palette.mid
+                border.width: 1
+                opacity: device.serialNumber ? 1 : 0.5
+                Label {
+                    anchors.centerIn: parent
+                    text: resetBtn.armed ? "Confirm factory reset" : "Reset to factory defaults"
+                    color: resetBtn.armed ? "#e74c3c" : palette.text
+                    font.pixelSize: 12
+                    font.bold: resetBtn.armed
+                }
+                MouseArea {
+                    id: resetMa
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: device.serialNumber ? Qt.PointingHandCursor : Qt.ArrowCursor
+                    enabled: device.serialNumber !== ""
+                    onClicked: {
+                        if (!resetBtn.armed) {
+                            resetBtn.armed = true
+                            resetDisarmTimer.restart()
+                        } else {
+                            resetDisarmTimer.stop()
+                            resetBtn.armed = false
+                            device.factoryReset()
+                        }
+                    }
+                }
+                Timer {
+                    id: resetDisarmTimer
+                    interval: 5000
+                    onTriggered: resetBtn.armed = false
+                }
+            }
         }
     }
 }

@@ -213,6 +213,13 @@ void DeviceProxy::setEqualizerPreset(int preset) {
     m_iface->asyncCall("SetEqualizerPreset", preset);
 }
 
+void DeviceProxy::factoryReset() {
+    // Daemon requires the current serial number as confirmation so a
+    // mis-fired call cannot wipe a device the caller didn't mean to target.
+    if (m_serialNumber.isEmpty()) return;
+    m_iface->asyncCall("FactoryReset", m_serialNumber);
+}
+
 void DeviceProxy::loadRouting() {
     auto* call = new QDBusPendingCallWatcher(m_iface->asyncCall("GetRouting"), this);
     connect(call, &QDBusPendingCallWatcher::finished, this, [this](QDBusPendingCallWatcher* w) {

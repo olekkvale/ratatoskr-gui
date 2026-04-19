@@ -83,6 +83,7 @@ public:
     Q_INVOKABLE void setLedBrightness(int brightness);
     Q_INVOKABLE void setEqualizerPreset(int preset);
     Q_INVOKABLE void setCustomEqualizer(int type, QVariantList bands);
+    Q_INVOKABLE void factoryReset();
     Q_INVOKABLE void loadRouting();
     Q_INVOKABLE void setRouting(int streamVol, bool streamMute,
                                 int micVol, bool micMute,
