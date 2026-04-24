@@ -63,6 +63,7 @@ DeviceProxy::DeviceProxy(QObject* parent) : QObject(parent) {
 }
 
 void DeviceProxy::pollAll() {
+    pollPower();
     asyncGetInt("GetVolume", [this](int v) { if (v >= 0) { m_volume = v; emit volumeChanged(); } });
     asyncGetInt("GetSidetone", [this](int v) { if (v >= 0) { m_sidetone = v; emit sidetoneChanged(); } });
     asyncGetInt("GetChatmix", [this](int v) { if (v >= 0) { m_mixamp = v; emit mixampChanged(); } });
@@ -121,13 +122,23 @@ void DeviceProxy::asyncGetString(const QString& method, std::function<void(const
     });
 }
 
+void DeviceProxy::pollPower() {
+    // GetPower returns 1=on, 0=off, -1=unknown. m_connected reflects power state
+    // (headset on/off) since basestation always responds even when headset is off.
+    asyncGetInt("GetPower", [this](int v) {
+        bool wasConnected = m_connected;
+        m_connected = (v == 1);
+        if (m_connected != wasConnected) {
+            emit connectedChanged();
+        }
+    });
+}
+
 void DeviceProxy::pollBattery() {
     asyncGetInt("GetBatteryPercent", [this](int v) {
         if (v >= 0) {
             m_battery = v;
-            m_connected = true;
             emit batteryChanged();
-            emit connectedChanged();
         }
     });
     asyncGetInt("GetBatteryCharging", [this](int v) {

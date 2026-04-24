@@ -124,6 +124,7 @@ private slots:
 private:
     void pollAll();
     void pollBattery();
+    void pollPower();
     void asyncGetInt(const QString& method, std::function<void(int)> callback);
     void asyncGetString(const QString& method, std::function<void(const QString&)> callback);
 
