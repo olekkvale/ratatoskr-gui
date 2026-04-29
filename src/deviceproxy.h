@@ -98,6 +98,16 @@ public:
     Q_INVOKABLE QStringList deletedEqPresets();
     Q_INVOKABLE void refresh();
 
+    /// Run the Steg 2 session-detector against drain-history.jsonl. Returns a
+    /// list of session maps, each with start_ts/end_ts/start_pct/end_pct/
+    /// duration_min/drain_rate_pct_per_hour/signal_drops/valid. Valid sessions
+    /// pass the ≥30 min duration AND ≥5 % drain filter — those are the ones
+    /// Steg 3 will aggregate. Invalid sessions are kept in the output for
+    /// diagnostics. Signal-loss heuristic: a `powered:false` event with grace
+    /// ≤ 180 s and Δpct ≤ 1 on return is treated as RF dropout and the
+    /// session continues (counted in `signal_drops`).
+    Q_INVOKABLE QVariantList detectDrainSessions();
+
     /// Asynchronously fetch active EQ data. Fires `activeEqualizerDataReady`
     /// when the reply arrives. type: 0=mic, 1=hp. Use this from QML — the sync
     /// variant blocks the UI thread.

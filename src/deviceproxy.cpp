@@ -200,6 +200,154 @@ void DeviceProxy::pollBattery() {
 
 void DeviceProxy::refresh() { pollAll(); }
 
+// Steg 2: session-detector with signal-loss heuristic.
+// Constants match the spec in ratatoskr_battery.md.
+namespace {
+constexpr int GRACE_SEC          = 180;       // signal-drop window
+constexpr int GAP_SEC            = 600;       // 10 min — split session on data gap
+constexpr int PCT_TOLERANCE      = 1;         // Δpct allowed during signal drop
+constexpr int MIN_DURATION_SEC   = 30 * 60;   // ≥30 min for a valid session
+constexpr int MIN_DRAIN_PCT      = 5;         // ≥5 % drain for a valid session
+constexpr int JUMP_PCT           = 5;         // pct jump above this …
+constexpr int JUMP_WINDOW_SEC    = 120;       // … within this window aborts session
+
+struct CurSession {
+    qint64 start_ts = 0;
+    int    start_pct = 0;
+    qint64 last_ts  = 0;
+    int    last_pct = 0;
+    QVariantList signal_drops;
+};
+
+QVariantMap finalizeSession(const CurSession& cur, qint64 end_ts, int end_pct) {
+    qint64 dur_sec = end_ts - cur.start_ts;
+    int drain_pct  = cur.start_pct - end_pct;
+    double rate    = (dur_sec > 0) ? (drain_pct * 3600.0 / dur_sec) : 0.0;
+    QVariantMap s;
+    s["start_ts"]                = static_cast<qlonglong>(cur.start_ts);
+    s["end_ts"]                  = static_cast<qlonglong>(end_ts);
+    s["start_pct"]               = cur.start_pct;
+    s["end_pct"]                 = end_pct;
+    s["duration_min"]            = static_cast<int>(dur_sec / 60);
+    s["drain_rate_pct_per_hour"] = std::round(rate * 1000.0) / 1000.0;
+    s["signal_drops"]            = cur.signal_drops;
+    s["valid"]                   = dur_sec >= MIN_DURATION_SEC && drain_pct >= MIN_DRAIN_PCT;
+    return s;
+}
+} // namespace
+
+QVariantList DeviceProxy::detectDrainSessions() {
+    QFile file(drainHistoryFilePath());
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) return {};
+
+    // Parse JSONL into (ts, pct, charging, powered) tuples.
+    struct Sample { qint64 ts; int pct; bool charging; bool powered; };
+    QList<Sample> samples;
+    samples.reserve(4096);
+    while (!file.atEnd()) {
+        QByteArray line = file.readLine().trimmed();
+        if (line.isEmpty()) continue;
+        QJsonParseError err;
+        QJsonDocument doc = QJsonDocument::fromJson(line, &err);
+        if (err.error != QJsonParseError::NoError || !doc.isObject()) continue;
+        QJsonObject o = doc.object();
+        Sample s;
+        s.ts       = static_cast<qint64>(o["ts"].toVariant().toLongLong());
+        s.pct      = o["pct"].toInt();
+        s.charging = o["charging"].toBool();
+        s.powered  = o["powered"].toBool();
+        samples.append(s);
+    }
+    file.close();
+    if (samples.isEmpty()) return {};
+
+    // Defensive sort — append-only writers should keep ts monotonic, but
+    // writer-handover or clock skew could break that.
+    std::sort(samples.begin(), samples.end(),
+              [](const Sample& a, const Sample& b) { return a.ts < b.ts; });
+
+    enum class State { Idle, InSession, PendingOff };
+    State state = State::Idle;
+    CurSession cur;
+    qint64 pending_off_ts = 0;
+    int    pending_off_pct = 0;
+    QVariantList sessions;
+
+    for (const Sample& s : samples) {
+        switch (state) {
+        case State::Idle:
+            if (s.powered && !s.charging) {
+                cur = CurSession{s.ts, s.pct, s.ts, s.pct, {}};
+                state = State::InSession;
+            }
+            break;
+
+        case State::InSession:
+            if (s.charging) {
+                sessions.append(finalizeSession(cur, cur.last_ts, cur.last_pct));
+                state = State::Idle;
+            } else if (!s.powered) {
+                pending_off_ts = s.ts;
+                pending_off_pct = s.pct;
+                state = State::PendingOff;
+            } else {
+                qint64 gap = s.ts - cur.last_ts;
+                int pct_jump = s.pct - cur.last_pct;
+                if (gap > GAP_SEC) {
+                    // Data gap — finalize old, start new.
+                    sessions.append(finalizeSession(cur, cur.last_ts, cur.last_pct));
+                    cur = CurSession{s.ts, s.pct, s.ts, s.pct, {}};
+                } else if (pct_jump > JUMP_PCT && gap < JUMP_WINDOW_SEC) {
+                    // Implausible upward jump — likely missed charging event.
+                    sessions.append(finalizeSession(cur, cur.last_ts, cur.last_pct));
+                    cur = CurSession{s.ts, s.pct, s.ts, s.pct, {}};
+                } else {
+                    cur.last_ts = s.ts;
+                    cur.last_pct = s.pct;
+                }
+            }
+            break;
+
+        case State::PendingOff:
+            if (s.charging) {
+                // Was off, now charging — confirms real off (docked).
+                sessions.append(finalizeSession(cur, pending_off_ts, pending_off_pct));
+                state = State::Idle;
+            } else if (s.powered) {
+                qint64 grace = s.ts - pending_off_ts;
+                int pct_diff = std::abs(s.pct - pending_off_pct);
+                if (grace < GRACE_SEC && pct_diff <= PCT_TOLERANCE) {
+                    // RF dropout — keep session alive, log the drop.
+                    QVariantMap drop;
+                    drop["ts"]         = static_cast<qlonglong>(pending_off_ts);
+                    drop["duration_s"] = static_cast<int>(grace);
+                    cur.signal_drops.append(drop);
+                    cur.last_ts  = s.ts;
+                    cur.last_pct = s.pct;
+                    state = State::InSession;
+                } else {
+                    // Real off then on — finalize previous, start new at this sample.
+                    sessions.append(finalizeSession(cur, pending_off_ts, pending_off_pct));
+                    cur = CurSession{s.ts, s.pct, s.ts, s.pct, {}};
+                    state = State::InSession;
+                }
+            }
+            // If still !powered, stay in PendingOff (timeout-based finalize
+            // happens on next powered:true OR end-of-stream).
+            break;
+        }
+    }
+
+    // Flush any in-flight session.
+    if (state == State::InSession) {
+        sessions.append(finalizeSession(cur, cur.last_ts, cur.last_pct));
+    } else if (state == State::PendingOff) {
+        sessions.append(finalizeSession(cur, pending_off_ts, pending_off_pct));
+    }
+
+    return sessions;
+}
+
 void DeviceProxy::logBatterySample() {
     if (!m_isDrainWriter) return;  // another process is the writer
     if (m_battery < 0) return;     // skip until first valid reading
