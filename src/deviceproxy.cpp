@@ -19,7 +19,7 @@ static const QString INTERFACE = "org.ratatoskr.Device";
 // EQ constants from A50 HID protocol (verified via G HUB USBPcap)
 static const int HEADPHONE_FREQS[] = {20, 50, 125, 250, 500, 1000, 2500, 5000, 10000, 20000};
 static const int MIC_FREQS[] = {80, 150, 250, 400, 800, 1500, 2500, 5000, 10000, 19000};
-static const int EQ_GAIN_CENTER = 120;  // 0 dB = 120, 10 units per dB
+static const int EQ_GAIN_CENTER = 120;  // 0 dB = 120, 20 units per dB (range -6..+6 dB, bytes 0x00..0xF0)
 
 // Q factor ↔ byte: Q = 0.031 + (byte/255)^0.8584 × 7.938
 static uint8_t qFactorToByte(double q) {
@@ -293,8 +293,8 @@ void DeviceProxy::setCustomEqualizer(int type, QVariantList bands) {
             gain_db = v.toDouble();
         }
 
-        gain_db = qBound(-12.0, gain_db, 12.0);
-        auto gain_byte = static_cast<uint8_t>(qBound(0, qRound(EQ_GAIN_CENTER + gain_db * 10), 240));
+        gain_db = qBound(-6.0, gain_db, 6.0);
+        auto gain_byte = static_cast<uint8_t>(qBound(0, qRound(EQ_GAIN_CENTER + gain_db * 20), 240));
         uint8_t q_byte = qFactorToByte(q_factor);
         int off = i * 5;
         bandData[off]     = static_cast<char>(freq >> 8);
