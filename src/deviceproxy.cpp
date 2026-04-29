@@ -52,6 +52,8 @@ DeviceProxy::DeviceProxy(QObject* parent) : QObject(parent) {
                 this, SLOT(onPowerChanged(int)));
     bus.connect(SERVICE, PATH, INTERFACE, "BluetoothChanged",
                 this, SLOT(onBluetoothChanged(bool)));
+    bus.connect(SERVICE, PATH, INTERFACE, "EqualizerChanged",
+                this, SIGNAL(equalizerChanged(quint32)));
 
     // Initial poll at startup
     QTimer::singleShot(100, this, &DeviceProxy::pollAll);
@@ -305,6 +307,40 @@ void DeviceProxy::setCustomEqualizer(int type, QVariantList bands) {
     }
 
     m_iface->asyncCall("SetCustomEqualizer", type, bandData);
+}
+
+void DeviceProxy::requestActiveEqualizerData(int type) {
+    auto* call = new QDBusPendingCallWatcher(
+        m_iface->asyncCall("GetActiveEqualizerData", type), this);
+    connect(call, &QDBusPendingCallWatcher::finished, this,
+            [this, type](QDBusPendingCallWatcher* w) {
+        QDBusPendingReply<QByteArray> reply = *w;
+        QVariantList out;
+        if (!reply.isError()) {
+            const QByteArray& data = reply.value();
+            for (int i = 0; i < data.size(); i++) {
+                out.append(static_cast<int>(static_cast<uint8_t>(data[i])));
+            }
+        }
+        emit activeEqualizerDataReady(type, out);
+        w->deleteLater();
+    });
+}
+
+QVariantList DeviceProxy::getEqualizerPresetData(int type, int index) {
+    QDBusReply<QByteArray> reply = m_iface->call("GetEqualizerPresetData", type, index);
+    QVariantList out;
+    if (!reply.isValid()) return out;
+    const QByteArray& data = reply.value();
+    for (int i = 0; i < data.size(); i++) {
+        out.append(static_cast<int>(static_cast<uint8_t>(data[i])));
+    }
+    return out;
+}
+
+int DeviceProxy::getEqualizerPresetCount(int type) {
+    QDBusReply<int> reply = m_iface->call("GetEqualizerPresetCount", type);
+    return reply.isValid() ? reply.value() : -1;
 }
 
 // EQ preset persistence (~/.config/ratatoskr/eq-presets.json)

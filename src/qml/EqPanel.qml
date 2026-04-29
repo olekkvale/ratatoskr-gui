@@ -25,55 +25,62 @@ Rectangle {
         return (eqType === 1 ? defaultHeadphoneFreqs : defaultMicFreqs)[index]
     }
 
+    // Built-in preset gains in actual dB applied to device (firmware 1.3.24, ±6 dB scale).
+    // Values verified against G HUB USBPcap captures of preset activations (del4).
+    // Note: values are HALF of older G HUB UI labels — G HUB UI used 10 u/dB scale display
+    // while device decodes at 20 u/dB. These reflect the true audible output.
     property var builtinPresets: ({
         headphone: {
             "Standard": [0,0,0,0,0,0,0,0,0,0],
-            "Gaming":   [-10,-9,-7,-4,0,4,6,6,6,6],
-            "Media":    [8,6,4,-1,-1,2,4,3,1,-1]
+            "Gaming":   [-5,-4.5,-3.5,-2,0,2,3,3,3,3],
+            "Media":    [4,3,2,-0.5,-0.5,1,2,1.5,0.5,-0.5]
         },
         mic: {
             "Standard":    [0,0,0,0,0,0,0,0,0,0],
-            "Broadcast":   [8,8,5,3,0,0,0,1,2,2],
-            "Competition": [-6,-6,-3,0,0,2,3,3,3,4]
+            "Broadcast":   [4,4,2.5,1.5,0,0,0,0.5,1,1],
+            "Competition": [-3,-3,-1.5,0,0,1,1.5,1.5,1.5,2]
         }
     })
 
-    // Community presets — seeded to JSON on first run, then fully editable
+    // Community presets — gains in actual device dB (±6 dB scale).
+    // Music+Media and Tarkov verified against G HUB captures (eq_music_media,
+    // eq_tarkov_footsteps in del4). Other seeds halved from original community
+    // values which were calibrated for older 10 u/dB scale.
     property var communitySeeds: [
         { name: "Music+Media", type: 1, bands: [
-            {gain:8,q:1.367,freq:30},{gain:6,q:1.474,freq:60},
-            {gain:3,q:1.367,freq:120},{gain:3,q:1.580,freq:250},
-            {gain:3,q:1.474,freq:1000},{gain:4,q:1.367,freq:2500},
-            {gain:6,q:1.223,freq:4000},{gain:5,q:1.186,freq:8000},
-            {gain:6,q:1.000,freq:12000},{gain:4,q:0.885,freq:16000}
+            {gain:4,q:1.367,freq:30},{gain:3,q:1.474,freq:60},
+            {gain:1.5,q:1.367,freq:120},{gain:1.5,q:1.580,freq:250},
+            {gain:1.5,q:1.474,freq:1000},{gain:2,q:1.367,freq:2500},
+            {gain:3,q:1.223,freq:4000},{gain:2.5,q:1.186,freq:8000},
+            {gain:3,q:1.000,freq:12000},{gain:2,q:0.885,freq:16000}
         ]},
         { name: "Tarkov Footsteps", type: 1, bands: [
-            {gain:-12,q:1.000,freq:20},{gain:-2,q:1.000,freq:50},
-            {gain:8,q:3.463,freq:125},{gain:-8,q:2.966,freq:250},
-            {gain:-2,q:4.424,freq:800},{gain:-6,q:3.463,freq:1215},
-            {gain:8,q:0.349,freq:1800},{gain:-6,q:1.822,freq:2650},
-            {gain:8,q:0.481,freq:4580},{gain:-6,q:2.454,freq:8000}
+            {gain:-6,q:1.000,freq:20},{gain:-1,q:1.000,freq:50},
+            {gain:4,q:3.463,freq:125},{gain:-4,q:2.966,freq:250},
+            {gain:-1,q:4.424,freq:800},{gain:-3,q:3.463,freq:1215},
+            {gain:4,q:0.349,freq:1800},{gain:-3,q:1.822,freq:2650},
+            {gain:4,q:0.481,freq:4580},{gain:-3,q:2.454,freq:8000}
         ]},
         { name: "Gaming+Media", type: 1, bands: [
-            {gain:2,q:1.075,freq:20},{gain:2,q:1.856,freq:45},
+            {gain:1,q:1.075,freq:20},{gain:1,q:1.856,freq:45},
             {gain:0,q:1.367,freq:150},{gain:0,q:1.000,freq:221},
-            {gain:1,q:1.924,freq:526},{gain:1,q:1.000,freq:1198},
-            {gain:1,q:2.454,freq:2283},{gain:5,q:1.000,freq:5000},
-            {gain:2,q:1.924,freq:10000},{gain:4,q:1.000,freq:17154}
+            {gain:0.5,q:1.924,freq:526},{gain:0.5,q:1.000,freq:1198},
+            {gain:0.5,q:2.454,freq:2283},{gain:2.5,q:1.000,freq:5000},
+            {gain:1,q:1.924,freq:10000},{gain:2,q:1.000,freq:17154}
         ]},
         { name: "Stream", type: 0, bands: [
-            {gain:0,q:1.0,freq:60},{gain:4,q:1.0,freq:125},
-            {gain:5,q:1.0,freq:64},{gain:2,q:1.0,freq:250},
-            {gain:-6,q:1.0,freq:500},{gain:-4,q:1.0,freq:1000},
-            {gain:4,q:1.0,freq:2000},{gain:6,q:1.0,freq:4000},
-            {gain:4,q:1.0,freq:8000},{gain:4,q:1.0,freq:16000}
+            {gain:0,q:1.0,freq:60},{gain:2,q:1.0,freq:125},
+            {gain:2.5,q:1.0,freq:64},{gain:1,q:1.0,freq:250},
+            {gain:-3,q:1.0,freq:500},{gain:-2,q:1.0,freq:1000},
+            {gain:2,q:1.0,freq:2000},{gain:3,q:1.0,freq:4000},
+            {gain:2,q:1.0,freq:8000},{gain:2,q:1.0,freq:16000}
         ]},
         { name: "Clear", type: 0, bands: [
-            {gain:10,q:0.031,freq:80},{gain:8,q:0.031,freq:150},
-            {gain:6,q:0.031,freq:250},{gain:6,q:0.031,freq:400},
-            {gain:6,q:0.031,freq:800},{gain:10,q:0.031,freq:1500},
-            {gain:12,q:0.031,freq:2500},{gain:10,q:0.031,freq:5000},
-            {gain:7,q:0.031,freq:10000},{gain:6,q:0.031,freq:19000}
+            {gain:5,q:0.031,freq:80},{gain:4,q:0.031,freq:150},
+            {gain:3,q:0.031,freq:250},{gain:3,q:0.031,freq:400},
+            {gain:3,q:0.031,freq:800},{gain:5,q:0.031,freq:1500},
+            {gain:6,q:0.031,freq:2500},{gain:5,q:0.031,freq:5000},
+            {gain:3.5,q:0.031,freq:10000},{gain:3,q:0.031,freq:19000}
         ]}
     ]
 
@@ -98,8 +105,35 @@ Rectangle {
         MouseArea { id: ma; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: parent.clicked() }
     }
 
-    Component.onCompleted: { seedCommunityPresets(); reloadCustomPresets() }
+    Component.onCompleted: {
+        seedCommunityPresets()
+        reloadCustomPresets()
+        // Only sync immediately if device is already connected. Otherwise the
+        // first false→true transition (via pollPower's reply) triggers it.
+        if (device && device.connected) {
+            _wasConnected = true
+            syncFromDevice()
+        }
+    }
     Timer { id: debounce; interval: 300; onTriggered: device.setCustomEqualizer(eqType, currentBands) }
+
+    /// Tracks the last observed connected state. Guards against connectedChanged
+    /// firing repeatedly during pollAll (the daemon emits it from 5 different
+    /// metadata callbacks — deviceName, firmware, serialNumber, uptime, plus
+    /// the actual power-state callback). Without this, syncFromDevice would
+    /// fire 5 times per startup, blocking the UI for ~2.5 s.
+    property bool _wasConnected: false
+
+    Connections {
+        target: device
+        function onConnectedChanged() {
+            let isConnected = device.connected
+            if (isConnected && !_wasConnected) syncFromDevice()
+            _wasConnected = isConnected
+        }
+        function onEqualizerChanged(hash) { syncFromDevice() }
+        function onActiveEqualizerDataReady(type, bytes) { applyActiveEqResult(type, bytes) }
+    }
 
     function seedCommunityPresets() {
         let existing = device.loadEqPresets()
@@ -115,7 +149,97 @@ Rectangle {
         if (hz >= 1000) { let k = hz / 1000; return (hz % 1000 === 0 ? k.toFixed(0) : k.toFixed(1)) + "k" }
         return hz.toString()
     }
-    function reloadCustomPresets() { customPresets = device.loadEqPresets().filter(p => p.type === eqType) }
+    /// All custom presets for both types. Filtered by eqType in the UI repeater
+    /// via `customPresetsForActiveTab`, but kept whole here so matchPreset can
+    /// resolve names for the *inactive* tab during cross-type sync.
+    property var customPresetsForActiveTab: customPresets.filter(p => p.type === eqType)
+    function reloadCustomPresets() { customPresets = device.loadEqPresets() }
+
+    /// Convert 50 bytes (canonical SET-compatible layout from daemon) to bands array.
+    function bytesToBands(bytes) {
+        if (!bytes || bytes.length !== 50) return null
+        let bands = []
+        for (let i = 0; i < 10; i++) {
+            let off = i * 5
+            let freq = ((bytes[off] & 0xff) << 8) | (bytes[off+1] & 0xff)
+            let qByte = bytes[off+2] & 0xff
+            let gainByte = bytes[off+4] & 0xff
+            // Inverse of qFactorToByte: q = 0.031 + (q_byte/255)^0.8584 * 7.938
+            let qNorm = qByte / 255.0
+            let q = 0.031 + Math.pow(qNorm, 0.8584) * 7.938
+            // gain byte: 0x78=0dB, 20 units per dB
+            let gain = Math.round(((gainByte - 120) / 20.0) * 10) / 10
+            bands.push({ freq: freq, q: Math.round(q * 1000) / 1000, gain: gain })
+        }
+        return bands
+    }
+
+    /// Find which preset matches given bands. Returns preset name or "" if none.
+    /// `forType` (0=mic, 1=hp) selects which built-in set + which custom-preset
+    /// subset to compare against, decoupling matching from the active tab so
+    /// cross-type sync resolves names for the inactive tab.
+    /// Stored gains are clamped to ±6 dB before comparison, since the device
+    /// cannot produce values outside that range.
+    function clampGain(g) { return Math.max(-6, Math.min(6, g)) }
+    function matchPreset(bands, forType) {
+        if (!bands) return ""
+        let t = (forType === undefined) ? eqType : forType
+        let defaultFreqs = t === 1 ? defaultHeadphoneFreqs : defaultMicFreqs
+        let presets = t === 1 ? builtinPresets.headphone : builtinPresets.mic
+        // Built-ins: freqs match defaults + gains (clamped) match hardcoded array.
+        // No Q check — built-ins use device-internal Q that varies by type
+        // (mic Q-byte=0x00≈0.031, hp Q-byte=0x16≈1.13), so a single "Q≈1.0"
+        // threshold can't cover both.
+        for (let name in presets) {
+            let gains = presets[name]
+            let allMatch = true
+            for (let i = 0; i < 10; i++) {
+                if (bands[i].freq !== defaultFreqs[i]) { allMatch = false; break }
+                if (Math.abs(bands[i].gain - clampGain(gains[i])) > 0.2) { allMatch = false; break }
+            }
+            if (allMatch) return name
+        }
+        // Custom presets: full freq+q+gain match. Filter by type *here* (not
+        // pre-filtered by eqType) so cross-type sync still resolves names.
+        for (let p of customPresets) {
+            if (p.type !== t) continue
+            if (!p.bands || p.bands.length !== 10) continue
+            let allMatch = true
+            for (let i = 0; i < 10; i++) {
+                if (bands[i].freq !== p.bands[i].freq) { allMatch = false; break }
+                if (Math.abs(bands[i].q - (p.bands[i].q || 1.0)) > 0.05) { allMatch = false; break }
+                if (Math.abs(bands[i].gain - clampGain(p.bands[i].gain)) > 0.2) { allMatch = false; break }
+            }
+            if (allMatch) return p.name
+        }
+        return ""
+    }
+
+    /// Request live EQ from device for both types. Async — replies arrive via
+    /// `activeEqualizerDataReady` signal handler `applyActiveEqResult`.
+    /// UI is never blocked; values fill in as data returns.
+    function syncFromDevice() {
+        if (!device || !device.connected) return
+        device.requestActiveEqualizerData(0)
+        device.requestActiveEqualizerData(1)
+    }
+
+    /// Handler for `activeEqualizerDataReady(type, bytes)`. Updates the active
+    /// tab live and the inactive tab's cached state so a later tab-switch
+    /// shows the device's current values without a re-query.
+    function applyActiveEqResult(type, bytes) {
+        let bands = bytesToBands(bytes)
+        if (!bands) return
+        let name = matchPreset(bands, type)
+        if (eqType !== type) {
+            // Cache for inactive tab.
+            if (type === 0) micState = { bands: bands.slice(), preset: name }
+            else            hpState  = { bands: bands.slice(), preset: name }
+            return
+        }
+        applyBands(bands)
+        activePreset = name
+    }
     function applyBuiltinPreset(gains) {
         let freqs = eqType === 1 ? defaultHeadphoneFreqs : defaultMicFreqs
         applyBands(gains.map((g, i) => ({gain: g, q: 1.0, freq: freqs[i]})))
@@ -163,7 +287,7 @@ Rectangle {
     property var micState: null
 
     property int noiseGateState: device.noiseGate
-    property bool isCustomPreset: customPresets.some(p => p.name === activePreset)
+    property bool isCustomPreset: customPresets.some(p => p.name === activePreset && p.type === eqType)
     property bool isModified: {
         if (!savedBands) return false
         return JSON.stringify(currentBands) !== JSON.stringify(savedBands)
@@ -186,14 +310,14 @@ Rectangle {
                 ToggleBtn { label: "Headphone"; active: eqType === 1
                     onClicked: {
                         micState = { bands: currentBands.slice(), preset: activePreset }
-                        eqType = 1; reloadCustomPresets()
+                        eqType = 1
                         if (hpState) { activePreset = hpState.preset; applyBands(hpState.bands) }
                         else applyBuiltinPreset(builtinPresets.headphone["Standard"])
                     } }
                 ToggleBtn { label: "Mic"; active: eqType === 0
                     onClicked: {
                         hpState = { bands: currentBands.slice(), preset: activePreset }
-                        eqType = 0; reloadCustomPresets()
+                        eqType = 0
                         if (micState) { activePreset = micState.preset; applyBands(micState.bands) }
                         else applyBuiltinPreset(builtinPresets.mic["Standard"])
                     } }
@@ -212,12 +336,12 @@ Rectangle {
                 }
             }
 
-            // Custom presets (includes seeded community presets)
+            // Custom presets (includes seeded community presets) for the active tab.
             GridLayout {
                 Layout.fillWidth: true; columns: 3; columnSpacing: 6; rowSpacing: 6
-                visible: customPresets.length > 0
+                visible: customPresetsForActiveTab.length > 0
                 Repeater {
-                    model: customPresets
+                    model: customPresetsForActiveTab
                     PresetBtn { label: modelData.name; textColor: "#5a9a6a"; borderColor: "#2a5a3a"
                         onClicked: { activePreset = modelData.name; applyBands(modelData.bands) } }
                 }
@@ -241,7 +365,7 @@ Rectangle {
                 // dB scale — 5 labels at slider tick positions
                 Repeater {
                     id: dbLabels
-                    model: ["+12", "+6", "0", "-6", "-12"]
+                    model: ["+6", "+3", "0", "-3", "-6"]
                     Label {
                         x: 0; width: 28
                         y: bandArea.sliderTop + index * (bandArea.sliderH / 4) - 6
@@ -288,7 +412,7 @@ Rectangle {
                             y: bandArea.sliderTop
                             height: bandArea.sliderH
                             anchors.horizontalCenter: parent.horizontalCenter
-                            from: -12; to: 12; stepSize: 1
+                            from: -6; to: 6; stepSize: 1
                             value: gainValue
                             onMoved: updateBand(index, value, qSlider.value)
 
@@ -442,7 +566,7 @@ Rectangle {
                 RowLayout {
                     spacing: 6; Layout.fillWidth: true
                     Repeater {
-                        model: [{ label: "Home", value: 0x01 }, { label: "Night", value: 0x02 }, { label: "Tournament", value: 0x04 }]
+                        model: [{ label: "Home", value: 0x01 }, { label: "Night", value: 0x02 }, { label: "Tournament", value: 0x04 }, { label: "Disabled", value: 0x00 }]
                         Rectangle {
                             property bool isActive: noiseGateState === modelData.value
                             Layout.fillWidth: true; height: 30; radius: 6

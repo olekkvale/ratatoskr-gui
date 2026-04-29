@@ -98,6 +98,17 @@ public:
     Q_INVOKABLE QStringList deletedEqPresets();
     Q_INVOKABLE void refresh();
 
+    /// Asynchronously fetch active EQ data. Fires `activeEqualizerDataReady`
+    /// when the reply arrives. type: 0=mic, 1=hp. Use this from QML — the sync
+    /// variant blocks the UI thread.
+    Q_INVOKABLE void requestActiveEqualizerData(int type);
+
+    /// Read built-in preset EQ data. type: 0=mic, 1=hp. index: 0..2.
+    Q_INVOKABLE QVariantList getEqualizerPresetData(int type, int index);
+
+    /// Number of built-in presets per type.
+    Q_INVOKABLE int getEqualizerPresetCount(int type);
+
 signals:
     void batteryChanged();
     void volumeChanged();
@@ -112,6 +123,11 @@ signals:
     void btConnectedChanged();
     void btNameChanged();
     void routingChanged();
+    /// Fired when device-side EQ state changes externally (parallel client). Argument is firmware checksum hash.
+    void equalizerChanged(quint32 hash);
+    /// Fired with EQ data after `requestActiveEqualizerData(type)` completes.
+    /// `bytes` is empty on error. Type: 0=mic, 1=hp.
+    void activeEqualizerDataReady(int type, QVariantList bytes);
 
 private slots:
     void onBatteryChanged(int percent, bool charging);
