@@ -3,6 +3,7 @@
 #include <QDBusMessage>
 #include <QDBusReply>
 #include <QByteArray>
+#include <QDateTime>
 #include <QStandardPaths>
 #include <QJsonDocument>
 #include <QJsonArray>
@@ -11,6 +12,9 @@
 #include <QDir>
 #include <QtMath>
 #include <cmath>
+#include <fcntl.h>
+#include <sys/file.h>
+#include <unistd.h>
 
 static const QString SERVICE   = "org.ratatoskr";
 static const QString PATH      = "/org/ratatoskr/devices/a50_gen5";
@@ -32,6 +36,18 @@ static QString presetsFilePath() {
     QString dir = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/ratatoskr";
     QDir().mkpath(dir);
     return dir + "/eq-presets.json";
+}
+
+static QString drainHistoryFilePath() {
+    QString dir = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/ratatoskr";
+    QDir().mkpath(dir);
+    return dir + "/drain-history.jsonl";
+}
+
+static QString drainLockFilePath() {
+    QString dir = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/ratatoskr";
+    QDir().mkpath(dir);
+    return dir + "/drain-history.lock";
 }
 
 DeviceProxy::DeviceProxy(QObject* parent) : QObject(parent) {
@@ -62,6 +78,29 @@ DeviceProxy::DeviceProxy(QObject* parent) : QObject(parent) {
     auto* batteryTimer = new QTimer(this);
     connect(batteryTimer, &QTimer::timeout, this, &DeviceProxy::pollBattery);
     batteryTimer->start(300000);
+
+    // Try to become drain-history writer. If another process (the noctalia
+    // plugin) already holds the lock, we stay a reader and retry every 30 s
+    // — when the previous writer exits, the next attempt succeeds.
+    tryAcquireDrainLock();
+    auto* drainRetry = new QTimer(this);
+    connect(drainRetry, &QTimer::timeout, this, [this]() {
+        if (!m_isDrainWriter) tryAcquireDrainLock();
+    });
+    drainRetry->start(30000);
+}
+
+void DeviceProxy::tryAcquireDrainLock() {
+    if (m_isDrainWriter) return;  // already writer
+    QByteArray path = drainLockFilePath().toUtf8();
+    int fd = ::open(path.constData(), O_RDWR | O_CREAT | O_CLOEXEC, 0644);
+    if (fd < 0) return;
+    if (::flock(fd, LOCK_EX | LOCK_NB) == 0) {
+        m_drainLockFd = fd;  // keep fd open for life of process
+        m_isDrainWriter = true;
+    } else {
+        ::close(fd);
+    }
 }
 
 void DeviceProxy::pollAll() {
@@ -137,27 +176,52 @@ void DeviceProxy::pollPower() {
 }
 
 void DeviceProxy::pollBattery() {
-    asyncGetInt("GetBatteryPercent", [this](int v) {
+    // Two callbacks fire in indeterminate order. Use a shared counter so the
+    // drain-history sample is logged once both percent and charging are fresh.
+    auto pending = std::make_shared<int>(2);
+    auto onComplete = [this, pending]() {
+        if (--*pending == 0) logBatterySample();
+    };
+    asyncGetInt("GetBatteryPercent", [this, onComplete](int v) {
         if (v >= 0) {
             m_battery = v;
             emit batteryChanged();
         }
+        onComplete();
     });
-    asyncGetInt("GetBatteryCharging", [this](int v) {
+    asyncGetInt("GetBatteryCharging", [this, onComplete](int v) {
         if (v >= 0) {
             m_charging = (v != 0);
             emit batteryChanged();
         }
+        onComplete();
     });
 }
 
 void DeviceProxy::refresh() { pollAll(); }
+
+void DeviceProxy::logBatterySample() {
+    if (!m_isDrainWriter) return;  // another process is the writer
+    if (m_battery < 0) return;     // skip until first valid reading
+    QJsonObject sample{
+        {"ts",       static_cast<qint64>(QDateTime::currentSecsSinceEpoch())},
+        {"pct",      m_battery},
+        {"charging", m_charging},
+        {"powered",  m_connected},
+        {"writer",   QStringLiteral("gui")},
+    };
+    QFile file(drainHistoryFilePath());
+    if (!file.open(QIODevice::Append | QIODevice::Text)) return;
+    file.write(QJsonDocument(sample).toJson(QJsonDocument::Compact));
+    file.write("\n");
+}
 
 // D-Bus signal handlers
 void DeviceProxy::onBatteryChanged(int percent, bool charging) {
     m_battery = percent;
     m_charging = charging;
     emit batteryChanged();
+    logBatterySample();
 }
 
 void DeviceProxy::onVolumeChanged(int level) {
@@ -179,6 +243,8 @@ void DeviceProxy::onPowerChanged(int state) {
     bool wasConnected = m_connected;
     m_connected = (state == 0);
     emit connectedChanged();
+    // Log power transition to mark drain-history session boundaries.
+    logBatterySample();
     // Re-poll on power-on so mic mute and other state reflect the newly
     // connected headset rather than stale values from before power-off.
     if (m_connected && !wasConnected) {

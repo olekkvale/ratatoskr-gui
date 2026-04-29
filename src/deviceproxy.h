@@ -141,6 +141,15 @@ private:
     void pollAll();
     void pollBattery();
     void pollPower();
+    /// Append one JSONL line to ~/.config/ratatoskr/drain-history.jsonl with
+    /// {ts, pct, charging, powered, writer:"gui"}. Shared with the noctalia
+    /// plugin via flock advisory lock — only the process that holds
+    /// drain-history.lock writes; the other reads.
+    void logBatterySample();
+    /// Try to acquire exclusive flock on drain-history.lock. Sets
+    /// m_isDrainWriter to true on success. Called at startup and periodically
+    /// (every 30 s) so a reader can take over when the previous writer exits.
+    void tryAcquireDrainLock();
     void asyncGetInt(const QString& method, std::function<void(int)> callback);
     void asyncGetString(const QString& method, std::function<void(const QString&)> callback);
 
@@ -168,4 +177,10 @@ private:
     int m_routeGameVol = -1;   bool m_routeGameMute = false;
     int m_routeBtVol = -1;     bool m_routeBtMute = true;
     int m_routeVoiceVol = -1;  bool m_routeVoiceMute = false;
+
+    /// Drain-history writer election. If we acquire the flock, we own
+    /// m_drainLockFd for the lifetime of the process (or until destructor /
+    /// release). The OS releases the lock automatically on process death.
+    int m_drainLockFd = -1;
+    bool m_isDrainWriter = false;
 };

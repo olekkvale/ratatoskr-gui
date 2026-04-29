@@ -57,9 +57,22 @@ Rectangle {
             }
         }
 
-        // Battery
+        // Battery. Naive estimate from Logitech `max_life_span=24h` spec
+        // (G HUB battery.xml). DeviceProxy logs every sample to
+        // ~/.config/ratatoskr/gui-drain-history.jsonl — same JSONL schema as
+        // the plugin (intentionally separate file). Future fase 2-3 will add
+        // session-detector + drain-rate calibration; until then the "(kalibrerer)"
+        // marker tells the user the value is the spec, not measured data.
         ColumnLayout {
             spacing: 1
+            readonly property int batteryLifeSpanHours: 24
+            function timeRemaining() {
+                if (device.battery <= 0) return ""
+                let totalMin = Math.round((device.battery / 100) * batteryLifeSpanHours * 60)
+                let h = Math.floor(totalMin / 60)
+                let m = totalMin % 60
+                return h > 0 ? "~" + h + "h " + m + "min" : "~" + m + "min"
+            }
             Label {
                 text: device.battery >= 0 ? device.battery + "%" : "--"
                 color: device.battery >= 0 && device.battery <= 15 ? "#e74c3c" : "#e0e0e0"
@@ -68,7 +81,8 @@ Rectangle {
                 horizontalAlignment: Text.AlignHCenter
             }
             Label {
-                text: device.charging ? "Charging" : "Battery"
+                text: device.charging ? "Charging"
+                    : (device.battery > 0 ? parent.timeRemaining() + " (kalibrerer)" : "Battery")
                 color: device.charging ? "#27ae60" : palette.disabled.text
                 font.pixelSize: 10
                 horizontalAlignment: Text.AlignHCenter
